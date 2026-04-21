@@ -1,31 +1,36 @@
+#include "CSVPP.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "CSVPP.h"
 
 // Вспомогательная функция для сравнения двух файлов
-static int filesEqual(const char* f1, const char* f2) {
+static int filesEqual(const char* f1, const char* f2)
+{
     FILE* a = fopen(f1, "r");
     FILE* b = fopen(f2, "r");
     if (!a || !b) {
-        if (a) fclose(a);
-        if (b) fclose(b);
+        if (a)
+            fclose(a);
+        if (b)
+            fclose(b);
         return 0;
     }
     char ca, cb;
     int equal = 1;
     while (equal && (ca = fgetc(a)) != EOF && (cb = fgetc(b)) != EOF) {
-        if (ca != cb) equal = 0;
+        if (ca != cb)
+            equal = 0;
     }
-    if (fgetc(a) != fgetc(b)) equal = 0;
+    if (fgetc(a) != fgetc(b))
+        equal = 0;
     fclose(a);
     fclose(b);
     return equal;
 }
 
-
-void test_read_and_print() {
+void test_read_and_print()
+{
     // Создаём CSV
     FILE* in = fopen("test_input.csv", "w");
     assert(in);
@@ -34,7 +39,7 @@ void test_read_and_print() {
     fprintf(in, "Bob,thirty,150.1\n");
     fclose(in);
 
-    Table t = {0};
+    Table t = { 0 };
     assert(readCSV("test_input.csv", &t));
     assert(t.rows == 3);
     assert(t.cols == 3);
@@ -56,14 +61,13 @@ void test_read_and_print() {
     // Вывод в файл
     assert(printTableToFile(&t, "test_output.txt"));
     // Ожидаемый вывод
-    const char* expected = 
-        "+========+=====+=======+\n"
-        "| Name   | Age | Score |\n"
-        "+========+=====+=======+\n"
-        "| Alice  |  25 |  98.5 |\n"
-        "+--------+-----+-------+\n"
-        "| Bob    |thirty|   100 |\n"
-        "+--------+-----+-------+\n";
+    const char* expected = "+========+=====+=======+\n"
+                           "| Name   | Age | Score |\n"
+                           "+========+=====+=======+\n"
+                           "| Alice  |  25 |  98.5 |\n"
+                           "+--------+-----+-------+\n"
+                           "| Bob    |thirty|   100 |\n"
+                           "+--------+-----+-------+\n";
     // Запишем его в файл
     FILE* exp = fopen("expected.txt", "w");
     assert(exp);
@@ -78,23 +82,26 @@ void test_read_and_print() {
 }
 
 // пустой CSV
-void testEmptyCsv() {
+void testEmptyCsv()
+{
     FILE* in = fopen("empty.csv", "w");
     fclose(in);
-    Table t = {0};
+    Table t = { 0 };
     assert(readCSV("empty.csv", &t) == false);
     freeTable(&t);
     remove("empty.csv");
 }
 
 // несуществующий файл
-void testMissingFile() {
-    Table t = {0};
+void testMissingFile()
+{
+    Table t = { 0 };
     assert(readCSV("nonexistent.csv", &t) == false);
     freeTable(&t);
 }
 
-int main(void) {
+int main(void)
+{
     test_read_and_print();
     test_empty_csv();
     test_missing_file();
