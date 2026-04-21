@@ -10,17 +10,17 @@ typedef struct {
 
 // Таблица
 typedef struct {
-    Cell*** data;
+    Cell** data;
     int rows;
     int cols;
     int* colWidths;
 } Table;
 
 // Чтение CSV-файла и заполнение Table
-bool readCSV(const char* filename, Table* table);
+bool readCSV(FILE* file, Table* table);
 
 // Печать таблицы в текстовый файл
-bool printTableToFile(const Table* table, const char* filename);
+void printTableToFile(const Table* table, FILE* file);
 
 // Освобождение памяти таблицы
 void freeTable(Table* table);

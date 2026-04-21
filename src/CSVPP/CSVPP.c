@@ -9,7 +9,7 @@ static bool isNumericString(char* str)
     char* endptr;
     (void)strtod(str, &endptr);
     if (endptr == str) {
-        return 0;
+        return false;
     }
     while (*endptr && isspace((unsigned char)*endptr)) {
         ++endptr;
@@ -24,11 +24,7 @@ void freeTable(Table* table)
         return;
     for (int i = 0; i < table->rows; ++i) {
         for (int j = 0; j < table->cols; ++j) {
-            Cell* cell = (Cell*)table->data[i][j];
-            if (cell) {
-                free(cell->value);
-                free(cell);
-            }
+            free(table->data[i][j].value);
         }
         free(table->data[i]);
     }
@@ -40,14 +36,8 @@ void freeTable(Table* table)
     table->colWidths = NULL;
 }
 
-bool readCSV(const char* filename, Table* table)
+bool readCSV(FILE* in, Table* table)
 {
-
-    FILE* in = fopen("input.csv", "r");
-    if (!in) {
-        printf("Не удалось открыть входной файл\n");
-        return 1;
-    }
 
     // Чтение всех строк файла
     char** lines = NULL;
@@ -63,11 +53,10 @@ bool readCSV(const char* filename, Table* table)
         strcpy(lines[numLines], buffer);
         ++numLines;
     }
-    fclose(in);
 
     if (numLines == 0) {
         free(lines);
-        return 0;
+        return false;
     }
 
     // Количество столбцов по первой строке
@@ -81,13 +70,12 @@ bool readCSV(const char* filename, Table* table)
     }
 
     // Выделение памяти под таблицу
-    Cell*** data = malloc(numLines * sizeof(Cell**));
+    Cell** data = (Cell**)malloc(numLines * sizeof(Cell*));
     for (int i = 0; i < numLines; ++i) {
-        data[i] = malloc(cols * sizeof(Cell*));
+        data[i] = (Cell*)malloc(cols * sizeof(Cell));
         for (int j = 0; j < cols; ++j) {
-            data[i][j] = malloc(sizeof(Cell));
-            data[i][j]->value = NULL;
-            data[i][j]->isNumeric = 0;
+            data[i][j].value = NULL;
+            data[i][j].isNumeric = false;
         }
     }
 
@@ -96,9 +84,9 @@ bool readCSV(const char* filename, Table* table)
         char* saveptr;
         char* token = strtok_r(lines[i], ",", &saveptr);
         for (int j = 0; j < cols; ++j) {
-            data[i][j]->value = malloc(strlen(token) + 1);
-            strcpy(data[i][j]->value, token);
-            data[i][j]->isNumeric = isNumericString(token);
+            data[i][j].value = malloc(strlen(token) + 1);
+            strcpy(data[i][j].value, token);
+            data[i][j].isNumeric = isNumericString(token);
             token = strtok_r(NULL, ",", &saveptr);
         }
     }
@@ -106,20 +94,20 @@ bool readCSV(const char* filename, Table* table)
     // Вычисление ширины столбцов
     int* colWidths = calloc(cols, sizeof(int));
     for (int j = 0; j < cols; ++j) {
-        int max_w = 0;
+        int maxW = 0;
         for (int i = 0; i < numLines; ++i) {
-            int len = strlen(data[i][j]->value);
-            if (len > max_w) {
-                max_w = len;
+            int len = strlen(data[i][j].value);
+            if (len > maxW) {
+                maxW = len;
             }
         }
-        colWidths[j] = max_w;
+        colWidths[j] = maxW;
     }
 
     table->rows = numLines;
     table->cols = cols;
     table->colWidths = colWidths;
-    table->data = (Cell***)data;
+    table->data = (Cell**)data;
 
     for (int i = 0; i < numLines; ++i) {
         free(lines[i]);
@@ -144,27 +132,20 @@ static void printLine(char ch, FILE* out, int cols, int* colWidths)
 }
 
 // Печать таблицы в файл
-bool printTableToFile(const Table* table, const char* filename)
+void printTableToFile(const Table* table, FILE* out)
 {
-    if (!table || !table->data || table->rows == 0 || table->cols == 0) {
-        return false;
+
+    if (!table || !table->data || table->rows == 0) {
+        return;
     }
 
-    // Открытие выходного файла
-    FILE* out = fopen(filename, "w");
-    if (!out) {
-        printf("Не удалось открыть выходной файл\n");
-        return false;
-    }
-
-    Cell*** data = (Cell***)table->data;
     // Верхняя граница
     printLine('=', out, table->cols, table->colWidths);
 
     // Заголовок (первая строка)
     fputc('|', out);
     for (int j = 0; j < table->cols; ++j) {
-        fprintf(out, " %-*s |", table->colWidths[j], data[0][j]->value);
+        fprintf(out, " %-*s |", table->colWidths[j], table->data[0][j].value);
     }
     fputc('\n', out);
 
@@ -175,16 +156,13 @@ bool printTableToFile(const Table* table, const char* filename)
     for (int i = 1; i < table->rows; ++i) {
         fputc('|', out);
         for (int j = 0; j < table->cols; ++j) {
-            if (data[i][j]->isNumeric) {
-                fprintf(out, " %*s |", table->colWidths[j], data[i][j]->value);
+            if (table->data[i][j].isNumeric) {
+                fprintf(out, " %*s |", table->colWidths[j], table->data[i][j].value);
             } else {
-                fprintf(out, " %-*s |", table->colWidths[j], data[i][j]->value);
+                fprintf(out, " %-*s |", table->colWidths[j], table->data[i][j].value);
             }
         }
         fputc('\n', out);
         printLine('-', out, table->cols, table->colWidths);
     }
-
-    fclose(out);
-    return true;
 }
