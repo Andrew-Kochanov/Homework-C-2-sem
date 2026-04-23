@@ -18,4 +18,4 @@ typedef struct {
 void automatInit(Automat* automat, Transition* trans, int transCount,
     int* finals, int finalCount, int start);
 
-bool dfaAccept(Automat* automat, char* str);
+bool dfaAccept(Automat* automat, const char* str);
