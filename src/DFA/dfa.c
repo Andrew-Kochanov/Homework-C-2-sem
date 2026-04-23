@@ -56,7 +56,7 @@ static int nextState(const Automat* automat, int current, char ch)
     return -1;
 }
 
-bool dfaAccept(Automat* automat, char* str)
+bool dfaAccept(Automat* automat, const char* str)
 {
     int state = automat->startState;
     for (const char* p = str; *p; ++p) {

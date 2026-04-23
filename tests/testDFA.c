@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-void run_tests()
+void runTests()
 {
     Transition transitions[] = {
         { 0, 0, 2 }, { 0, 1, 3 }, { 0, 4, 1 },
@@ -31,12 +31,13 @@ void run_tests()
     assert(dfaAccept(&automat, "-.25") == true);
     assert(dfaAccept(&automat, ".") == false);
     assert(dfaAccept(&automat, "-.") == false);
+    assert(dfaAccept(&automat, "123E45") == true);
 
     printf("All tests are passed\n");
 }
 
 int main(void)
 {
-    run_tests();
+    runTests();
     return 0;
 }
