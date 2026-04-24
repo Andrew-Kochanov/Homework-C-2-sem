@@ -74,7 +74,7 @@ DFAError dfaAccept(const Automat* automat, const char* str)
     }
     if (isFinal(automat, state)) {
         return DfaOk;
-    } else{
+    } else {
         return DfaReject;
     }
 }
