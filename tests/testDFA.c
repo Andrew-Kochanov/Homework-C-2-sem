@@ -23,6 +23,11 @@ static const char* CATEGORIES[] = { "0123456789", ".", "E", "+", "-" };
 #define STATE_EXP_SIGN 6
 #define STATE_EXP_DIGIT 7
 
+bool test(DFAError er, bool t)
+{
+    return (er == DfaOk) == t;
+}
+
 void runTests()
 {
     Transition transitions[] = {
@@ -67,17 +72,17 @@ void runTests()
     automatInit(&automat, transitions, transCount, finalStates, finalCount,
         STATE_START, CATEGORIES, NUM_CATEGORIES);
 
-    assert(dfaAccept(&automat, "38.871E5", NULL) == true);
-    assert(dfaAccept(&automat, ".591", NULL) == true);
-    assert(dfaAccept(&automat, "А я число?", NULL) == false);
-    assert(dfaAccept(&automat, "823.16.10", NULL) == false);
-    assert(dfaAccept(&automat, "-38.871E5", NULL) == true);
-    assert(dfaAccept(&automat, "-1", NULL) == true);
-    assert(dfaAccept(&automat, "12E", NULL) == false);
-    assert(dfaAccept(&automat, "-.25", NULL) == true);
-    assert(dfaAccept(&automat, ".", NULL) == false);
-    assert(dfaAccept(&automat, "-.", NULL) == false);
-    assert(dfaAccept(&automat, "123E45", NULL) == true);
+    assert(test(dfaAccept(&automat, "38.871E5"), true));
+    assert(test(dfaAccept(&automat, ".591"), true));
+    assert(test(dfaAccept(&automat, "А я число?"), false));
+    assert(test(dfaAccept(&automat, "823.16.10"), false));
+    assert(test(dfaAccept(&automat, "-38.871E5"), true));
+    assert(test(dfaAccept(&automat, "-1"), true));
+    assert(test(dfaAccept(&automat, "12E"), false));
+    assert(test(dfaAccept(&automat, "-.25"), true));
+    assert(test(dfaAccept(&automat, "."), false));
+    assert(test(dfaAccept(&automat, "-."), false));
+    assert(test(dfaAccept(&automat, "123E45"), true));
 
     printf("All tests are passed\n");
 }
