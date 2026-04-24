@@ -108,64 +108,24 @@ static void freeGraph(int n, Edge** adj)
     free(adj);
 }
 
-// Функция очистки для ошибок
-static void cleanup(int n, Edge** adj, int* state, int** cities, int* citiesSize, Heap* heaps, int k)
-{
-    if (adj) {
-        freeGraph(n, adj);
-    }
-
-    free(state);
-    if (cities) {
-        for (int g = 1; g <= k; ++g) {
-            if (cities[g])
-                free(cities[g]);
-        }
-        free(cities);
-    }
-    free(citiesSize);
-    if (heaps) {
-        for (int g = 1; g <= k; ++g)
-            heapFree(&heaps[g]);
-        free(heaps);
-    }
-}
-
 // Распределения городов между государствами
 int** solveCountries(int n, int m, int* roads, int k, int* capitals, int** sizes)
 {
     *sizes = NULL;
 
-    Edge** adj = NULL;
-    int* state = NULL;
-    int** cities = NULL;
-    int* citiesSize = NULL;
-    Heap* heaps = NULL;
-
     // Построение неориентированного графа
-    adj = calloc(n + 1, sizeof(Edge*));
-    if (!adj) {
-        printf("Ошибка выделения памяти под граф\n");
-        goto error;
-    }
+    Edge** adj = calloc(n + 1, sizeof(Edge*));
+
     for (int i = 0; i < m; ++i) {
         int u = roads[3 * i];
         int v = roads[3 * i + 1];
         int len = roads[3 * i + 2];
         Edge* edge1 = malloc(sizeof(Edge));
-        if (!edge1) {
-            printf("Ошибка выделения памяти для ребра\n");
-            goto error;
-        }
         edge1->to = v;
         edge1->len = len;
         edge1->next = adj[u];
         adj[u] = edge1;
         Edge* edge2 = malloc(sizeof(Edge));
-        if (!edge2) {
-            printf("Ошибка выделения памяти для ребра\n");
-            goto error;
-        }
         edge2->to = u;
         edge2->len = len;
         edge2->next = adj[v];
@@ -173,29 +133,14 @@ int** solveCountries(int n, int m, int* roads, int k, int* capitals, int** sizes
     }
 
     // Состояние каждого города (0 – свободен, иначе номер государства)
-    state = calloc(n + 1, sizeof(int));
-    if (!state) {
-        printf("Ошибка выделения памяти для state\n");
-        goto error;
-    }
+    int* state = calloc(n + 1, sizeof(int));
 
     // Списки городов для каждого государства и их размеры
-    cities = malloc((k + 1) * sizeof(int*));
-    citiesSize = calloc(k + 1, sizeof(int));
-    if (!cities || !citiesSize) {
-        printf("Ошибка выделения памяти для списков городов\n");
-        goto error;
-    }
-    for (int g = 1; g <= k; ++g) {
-        cities[g] = NULL;
-    }
+    int** cities = malloc((k + 1) * sizeof(int*));
+    int* citiesSize = calloc(k + 1, sizeof(int));
 
     // Кучи для каждого государства
-    heaps = malloc((k + 1) * sizeof(Heap));
-    if (!heaps) {
-        printf("Ошибка выделения памяти для куч\n");
-        goto error;
-    }
+    Heap* heaps = malloc((k + 1) * sizeof(Heap));
     for (int g = 1; g <= k; ++g) {
         heapInit(&heaps[g]);
     }
@@ -205,25 +150,14 @@ int** solveCountries(int n, int m, int* roads, int k, int* capitals, int** sizes
     // Инициализация столицами (заняты, добавлены в списки, соседи в кучи)
     for (int g = 1; g <= k; ++g) {
         int cap = capitals[g - 1];
-        if (cap < 1 || cap > n || state[cap] != 0) {
-            printf("Ошибка: некорректная столица %d\n", cap);
-            goto error;
-        }
         state[cap] = g;
         cities[g] = malloc(sizeof(int));
-        if (!cities[g]) {
-            printf("Ошибка выделения памяти для списка государства %d\n", g);
-            goto error;
-        }
         cities[g][0] = cap;
         citiesSize[g] = 1;
         totalOccupied++;
         for (Edge* edge = adj[cap]; edge; edge = edge->next) {
             if (state[edge->to] == 0) {
-                if (!heapPush(&heaps[g], edge->len, edge->to)) {
-                    printf("Ошибка памяти при добавлении в кучу для государства %d\n", g);
-                    goto error;
-                }
+                heapPush(&heaps[g], edge->len, edge->to);
             }
         }
     }
@@ -239,17 +173,12 @@ int** solveCountries(int n, int m, int* roads, int k, int* capitals, int** sizes
                 continue;
             while (heaps[g].size > 0) {
                 HeapNode best;
-                if (!heapPop(&heaps[g], &best))
-                    continue;
+                heapPop(&heaps[g], &best);
                 if (state[best.city] == 0) {
 
                     // Берем ближайший свободный город
                     state[best.city] = g;
                     int* newCities = realloc(cities[g], (citiesSize[g] + 1) * sizeof(int));
-                    if (!newCities) {
-                        printf("Ошибка перевыделения памяти для списка государства %d\n", g);
-                        goto error;
-                    }
                     cities[g] = newCities;
                     cities[g][citiesSize[g]++] = best.city;
                     totalOccupied++;
@@ -257,10 +186,7 @@ int** solveCountries(int n, int m, int* roads, int k, int* capitals, int** sizes
                     // Добавляем соседей нового города в кучу
                     for (Edge* edge = adj[best.city]; edge; edge = edge->next) {
                         if (state[edge->to] == 0) {
-                            if (!heapPush(&heaps[g], edge->len, edge->to)) {
-                                printf("Ошибка памяти при добавлении в кучу для государства %d\n", g);
-                                goto error;
-                            }
+                            heapPush(&heaps[g], edge->len, edge->to);
                         }
                     }
 
@@ -282,36 +208,9 @@ int** solveCountries(int n, int m, int* roads, int k, int* capitals, int** sizes
     // Формируем результат
     int** result = malloc((k + 1) * sizeof(int*));
     int* resultSizes = malloc((k + 1) * sizeof(int));
-    if (!result || !resultSizes) {
-        printf("Ошибка выделения памяти для результата\n");
-        if (cities) {
-            for (int g = 1; g <= k; ++g) {
-                free(cities[g]);
-            }
-            free(cities);
-        }
-        free(citiesSize);
-        free(result);
-        free(resultSizes);
-        return NULL;
-    }
     for (int g = 1; g <= k; ++g) {
         resultSizes[g] = citiesSize[g];
         result[g] = malloc(citiesSize[g] * sizeof(int));
-        if (!result[g]) {
-            for (int t = 1; t < g; ++t) {
-                free(result[t]);
-            }
-            free(result);
-            free(resultSizes);
-            for (int t = 1; t <= k; ++t) {
-                free(cities[t]);
-            }
-            free(cities);
-            free(citiesSize);
-            printf("Ошибка выделения памяти для результата государства %d\n", g);
-            return NULL;
-        }
         for (int i = 0; i < citiesSize[g]; ++i) {
             result[g][i] = cities[g][i];
         }
@@ -321,12 +220,6 @@ int** solveCountries(int n, int m, int* roads, int k, int* capitals, int** sizes
     free(citiesSize);
     *sizes = resultSizes;
     return result;
-
-error:
-
-    // При любой ошибке освобождаем всё, что успели выделить
-    cleanup(n, adj, state, cities, citiesSize, heaps, k);
-    return NULL;
 }
 
 // Освобождения памяти, выделенной для результата

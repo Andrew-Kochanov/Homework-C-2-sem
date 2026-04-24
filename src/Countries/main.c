@@ -44,12 +44,6 @@ int main()
     // Вызов основного алгоритма
     int* sizes = NULL;
     int** result = solveCountries(n, m, roads, k, capitals, &sizes);
-    if (!result) {
-        printf("Ошибка при решении задачи\n");
-        free(roads);
-        free(capitals);
-        return 1;
-    }
 
     // Вывод результата
     for (int g = 1; g <= k; ++g) {
