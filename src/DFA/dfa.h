@@ -5,13 +5,13 @@
 typedef enum {
 
     // строка принадлежит языку
-    dfaOk,
+    DfaOk,
 
     // встречен символ, не входящий ни в одну категорию
-    dfaInvalidSymbol,
+    DfaInvalidSymbol,
 
     // нет перехода из текущего состояния по данной категории
-    dfaNoTransition
+    DfaNoTransition
 } DFAError;
 
 typedef struct {

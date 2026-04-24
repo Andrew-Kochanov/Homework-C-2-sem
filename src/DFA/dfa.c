@@ -42,7 +42,7 @@ static int nextState(const Automat* automat, int current, char ch, DFAError* err
     int cat = getCategory(automat, ch);
     if (cat == -1) {
         if (error) {
-            *error = dfaInvalidSymbol;
+            *error = DfaInvalidSymbol;
         }
         return -1;
     }
@@ -53,7 +53,7 @@ static int nextState(const Automat* automat, int current, char ch, DFAError* err
     }
     // допустимая категория, но переход не определён
     if (error) {
-        *error = dfaNoTransition;
+        *error = DfaNoTransition;
     }
     return -1;
 }
@@ -61,7 +61,7 @@ static int nextState(const Automat* automat, int current, char ch, DFAError* err
 bool dfaAccept(const Automat* automat, const char* str, DFAError* errorCode)
 {
     if (errorCode) {
-        *errorCode = dfaOk;
+        *errorCode = DfaOk;
     }
 
     int state = automat->startState;
@@ -73,13 +73,13 @@ bool dfaAccept(const Automat* automat, const char* str, DFAError* errorCode)
     }
     if (isFinal(automat, state)) {
         if (errorCode) {
-            *errorCode = dfaOk;
+            *errorCode = DfaOk;
         }
 
         return true;
     } else {
-        if (errorCode && *errorCode == dfaOk) {
-            *errorCode = dfaNoTransition;
+        if (errorCode && *errorCode == DfaOk) {
+            *errorCode = DfaNoTransition;
         }
 
         return false;
