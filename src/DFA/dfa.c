@@ -67,7 +67,7 @@ DFAError dfaAccept(const Automat* automat, const char* str)
     int state = automat->startState;
     for (const char* p = str; *p; ++p) {
         DFAError err = DfaOk;
-        state = nextState(automat, state, *p, err);
+        state = nextState(automat, state, *p, &err);
         if (state == -1) {
             return err;
         }

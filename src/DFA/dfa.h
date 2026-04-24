@@ -37,4 +37,4 @@ void automatInit(Automat* automat, Transition* trans, int transCount,
     int* finalStates, int finalCount, int startState, const char** categories,
     int numCategories);
 
-bool dfaAccept(const Automat* automat, const char* str);
+DFAError dfaAccept(const Automat* automat, const char* str);
