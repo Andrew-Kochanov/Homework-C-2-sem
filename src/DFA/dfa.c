@@ -73,12 +73,12 @@ bool dfaAccept(const Automat* automat, const char* str, DFAError* errorCode)
     }
     if (isFinal(automat, state)) {
         if (errorCode) {
-            *errorCode = dfaOK;
+            *errorCode = dfaOk;
         }
 
         return true;
     } else {
-        if (errorCode && *errorCode == dfaOK) {
+        if (errorCode && *errorCode == dfaOk) {
             *errorCode = dfaNoTransition;
         }
 
