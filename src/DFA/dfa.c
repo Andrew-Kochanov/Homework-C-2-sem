@@ -1,31 +1,30 @@
 #include "dfa.h"
+#include <string.h>
 
-// Классификация символов
-static int category(char c)
+// Вспомогательная функция: определить категорию символа
+static int getCategory(const Automat* automat, char ch)
 {
-    if (c >= '0' && c <= '9')
-        return 0;
-    if (c == '.')
-        return 1;
-    if (c == 'E')
-        return 2;
-    if (c == '+')
-        return 3;
-    if (c == '-')
-        return 4;
+    for (int i = 0; i < automat->numCategories; ++i) {
 
-    // недопустимый символ
+        // Проверяем, входит ли символ в строку categories[i]
+        if (strchr(automat->categories[i], ch) != NULL) {
+            return i;
+        }
+    }
     return -1;
 }
 
 void automatInit(Automat* automat, Transition* trans, int transCount,
-    int* finals, int finalCount, int start)
+    int* final, int finalCount, int start, const char** categories,
+    int numCategories)
 {
     automat->trans = trans;
     automat->transCount = transCount;
-    automat->finalStates = finals;
+    automat->finalStates = final;
     automat->finalCount = finalCount;
     automat->startState = start;
+    automat->categories = categories;
+    automat->numCategories = numCategories;
 }
 
 static bool isFinal(const Automat* automat, int state)
@@ -38,32 +37,51 @@ static bool isFinal(const Automat* automat, int state)
     return false;
 }
 
-static int nextState(const Automat* automat, int current, char ch)
+static int nextState(const Automat* automat, int current, char ch, DFAError* error)
 {
-    int cat = category(ch);
-
-    // Символ не из алфавита
+    int cat = getCategory(automat, ch);
     if (cat == -1) {
+        if (error) {
+            *error = DFA_INVALID_SYMBOL;
+        }
         return -1;
     }
-
     for (int i = 0; i < automat->transCount; ++i) {
         if (automat->trans[i].from == current && automat->trans[i].category == cat) {
             return automat->trans[i].to;
         }
     }
-    // Нет перехода
+    // допустимая категория, но переход не определён
+    if (error) {
+        *error = DFA_NO_TRANSITION;
+    }
     return -1;
 }
 
-bool dfaAccept(Automat* automat, const char* str)
+bool dfaAccept(const Automat* automat, const char* str, DFAError* errorCode)
 {
+    if (errorCode) {
+        *errorCode = DFA_OK;
+    }
+
     int state = automat->startState;
     for (const char* p = str; *p; ++p) {
-        state = nextState(automat, state, *p);
+        state = nextState(automat, state, *p, errorCode);
         if (state == -1) {
             return false;
         }
     }
-    return isFinal(automat, state);
+    if (isFinal(automat, state)) {
+        if (errorCode) {
+            *errorCode = DFA_OK;
+        }
+
+        return true;
+    } else {
+        if (errorCode && *errorCode == DFA_OK) {
+            *errorCode = DFA_NO_TRANSITION;
+        }
+
+        return false;
+    }
 }
