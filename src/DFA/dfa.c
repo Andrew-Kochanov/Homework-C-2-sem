@@ -60,9 +60,6 @@ static int nextState(const Automat* automat, int current, char ch, DFAError* err
 
 DFAError dfaAccept(const Automat* automat, const char* str)
 {
-    if (errorCode) {
-        *errorCode = DfaOk;
-    }
 
     int state = automat->startState;
     for (const char* p = str; *p; ++p) {
