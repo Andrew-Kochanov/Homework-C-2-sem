@@ -72,8 +72,8 @@ int main(void)
     fgets(input, sizeof(input), stdin);
     input[strcspn(input, "\n")] = '\0';
 
-    DFAError err;
-    if (dfaAccept(&automat, input, &err)) {
+    DFAError err = dfaAccept(&automat, input)
+    if (err == DfaOk) {
         printf("Это число!\n");
     } else {
         printf("Это не число:(\n");

@@ -58,7 +58,7 @@ static int nextState(const Automat* automat, int current, char ch, DFAError* err
     return -1;
 }
 
-bool dfaAccept(const Automat* automat, const char* str, DFAError* errorCode)
+DFAError dfaAccept(const Automat* automat, const char* str)
 {
     if (errorCode) {
         *errorCode = DfaOk;
@@ -66,22 +66,15 @@ bool dfaAccept(const Automat* automat, const char* str, DFAError* errorCode)
 
     int state = automat->startState;
     for (const char* p = str; *p; ++p) {
-        state = nextState(automat, state, *p, errorCode);
+        DFAError err = DfaOk;
+        state = nextState(automat, state, *p, err);
         if (state == -1) {
-            return false;
+            return err;
         }
     }
     if (isFinal(automat, state)) {
-        if (errorCode) {
-            *errorCode = DfaOk;
-        }
-
-        return true;
-    } else {
-        if (errorCode && *errorCode == DfaOk) {
-            *errorCode = DfaNoTransition;
-        }
-
-        return false;
+        return DfaOk;
+    } else{
+        return DfaReject;
     }
 }

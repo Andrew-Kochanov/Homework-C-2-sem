@@ -7,6 +7,9 @@ typedef enum {
     // строка принадлежит языку
     DfaOk,
 
+    // строка не принадлежит языку
+    DfaReject,
+
     // встречен символ, не входящий ни в одну категорию
     DfaInvalidSymbol,
 
@@ -34,4 +37,4 @@ void automatInit(Automat* automat, Transition* trans, int transCount,
     int* finalStates, int finalCount, int startState, const char** categories,
     int numCategories);
 
-bool dfaAccept(const Automat* automat, const char* str, DFAError* errorCode);
+bool dfaAccept(const Automat* automat, const char* str);
